@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"net/http"
 	"./extractor"
+  "./ngrams"
+	"./model"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -17,10 +20,17 @@ func catHandler(w http.ResponseWriter, r * http.Request) {
 func main() {
 	path := "./data/data.json"
 	data := extractor.LoadData(path)
+  var newModel model.NgramModel
+  newModel.Init()
 
 	for _, d := range data["data"] {
-		ds, _ := d.([]interface{})
-	  fmt.Println(ds[0])
+    ds, _ := d.([]interface{})
+		sGram := ngrams.MakeNgrams(strings.ToLower(ds[0].(string)), 3)
+		for _, gram := range sGram {
+			fmt.Println(gram)
+		  newModel.FitModel(gram)
+		}
+		fmt.Println("")
 	}
 	http.HandleFunc("/api/categorize", catHandler)
 	http.HandleFunc("/", handler)
